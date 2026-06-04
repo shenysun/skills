@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Autoresearch — {{SKILL_NAME}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+/* ===== VARIABLES ===== */
+:root {
+  --blue:#0038ff; --red:#e8281a; --green:#007a38; --amber:#c97400;
+  --purple:#5b21b6; --teal:#0891b2; --ink:#080c14; --muted:#6b7a8d;
+  --bg:#f4f6fb; --panel:#fff; --border:#e2e6ef;
+  /* light tints for areas */
+  --blue-lt:#eef1ff; --red-lt:#fff0ef; --green-lt:#edfbf3;
+  --purple-lt:#f3effe; --teal-lt:#e0f7fc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow Condensed',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;
+  background-image:linear-gradient(rgba(0,56,255,.03) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,56,255,.03) 1px,transparent 1px);
+  background-size:28px 28px;}
+
+/* ===== LAYOUT ===== */
+.page{max-width:1480px;margin:0 auto;padding:24px 28px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:16px}
+.panel-title{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+
+/* ===== HEADER ===== */
+.hdr{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.hdr-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.04em;color:var(--ink)}
+.badge{font-family:'DM Mono',monospace;font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500}
+.badge-running{background:#e0eaff;color:var(--blue);animation:pulse 1.6s ease-in-out infinite}
+.badge-complete{background:#dcfce7;color:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hdr-meta{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);display:flex;gap:16px}
+.hdr-meta span{display:flex;gap:4px}
+.hdr-meta strong{color:var(--ink)}
+
+/* ===== KPI BAR ===== */
+.kpi-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.kpi-label{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.kpi-value{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:.02em;color:var(--ink);line-height:1}
+.kpi-sub{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px}
+.kpi-value.up{color:var(--green)} .kpi-value.base{color:var(--amber)}
+
+/* ===== MILESTONE TIMELINE ===== */
+.ms-body{display:flex;flex-wrap:wrap;gap:12px 0;align-items:flex-start}
+.ms-round{flex:1 1 180px;min-width:0}
+.ms-round-label{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.ms-round-label.r1{color:var(--blue)} .ms-round-label.r2{color:var(--red)}
+.ms-round-label.r3{color:var(--green)} .ms-round-label.r4{color:var(--purple)}
+.ms-round-label.r5{color:var(--teal)}
+.ms-dots{display:flex;flex-wrap:wrap;gap:8px}
+.ms-dot{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default}
+.ms-dot-pct{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.ms-dot-shape{width:18px;height:18px}
+.ms-dot.baseline .ms-dot-shape{color:var(--amber)}
+.ms-dot.keep    .ms-dot-shape{color:var(--green)}
+.ms-dot.discard .ms-dot-shape{color:var(--red)}
+
+/* ===== THREE COLUMN ===== */
+.three-col{display:grid;grid-template-columns:1fr 360px 280px;grid-template-rows:420px;gap:16px;margin-bottom:16px}
+.three-col>.panel{display:flex;flex-direction:column;overflow:hidden}
+#chart-wrap{flex:1;min-height:0}
+.eval-list{flex:1;overflow-y:auto;min-height:0}
+.round-stat-list{flex:1;overflow-y:auto;min-height:0}
+
+/* eval bars */
+.ev-row{margin-bottom:10px}
+.ev-name{font-size:12px;color:var(--ink);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-bar-bg{height:6px;background:var(--border);border-radius:3px;position:relative}
+.ev-bar-fg{height:6px;border-radius:3px;transition:width .4s}
+.ev-bar-fg.c-green{background:var(--green)} .ev-bar-fg.c-blue{background:var(--blue)}
+.ev-bar-fg.c-amber{background:var(--amber)} .ev-bar-fg.c-red{background:var(--red)}
+.ev-pct{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);float:right;margin-top:2px}
+
+/* round stat cards */
+.rs-card{padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:8px}
+.rs-label{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.rs-label.r1{color:var(--blue)} .rs-label.r2{color:var(--red)}
+.rs-label.r3{color:var(--green)} .rs-label.r4{color:var(--purple)}
+.rs-label.r5{color:var(--teal)}
+.rs-row{display:flex;justify-content:space-between;font-size:12px;margin-top:6px;color:var(--muted)}
+.rs-row strong{color:var(--ink)}
+.rs-bar-wrap{margin-top:8px;height:4px;background:var(--border);border-radius:2px}
+.rs-bar-fill{height:4px;border-radius:2px;transition:width .4s}
+.rs-bar-fill.r1{background:var(--blue)} .rs-bar-fill.r2{background:var(--red)}
+.rs-bar-fill.r3{background:var(--green)} .rs-bar-fill.r4{background:var(--purple)}
+.rs-bar-fill.r5{background:var(--teal)}
+
+/* ===== TWO COLUMN ===== */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+/* top jumps */
+.jump-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.jump-row:last-child{border-bottom:none}
+.jump-rank{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--border);line-height:1}
+.jump-delta{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--green);min-width:52px}
+.jump-desc{font-size:13px;color:var(--muted);line-height:1.4}
+.jump-id{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+
+/* insights */
+.insight-row{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--ink)}
+.insight-row:last-child{border-bottom:none}
+.insight-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.insight-warn{color:var(--red)}
+
+/* ===== EXPERIMENT TABLE ===== */
+.exp-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.exp-tab{padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.04em}
+.exp-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--ink);color:#fff;padding:8px 10px;text-align:left;font-weight:600;font-size:12px;letter-spacing:.04em}
+tbody tr:hover{background:#f8f9fd}
+tbody td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.rnd-seg td:first-child{border-left:3px solid}
+.rnd-seg.r1 td:first-child{border-left-color:var(--blue)} .rnd-seg.r2 td:first-child{border-left-color:var(--red)}
+.rnd-seg.r3 td:first-child{border-left-color:var(--green)} .rnd-seg.r4 td:first-child{border-left-color:var(--purple)}
+.rnd-seg.r5 td:first-child{border-left-color:var(--teal)}
+.rnd-hdr{background:#f8f9fd}
+.rnd-hdr td{padding:6px 10px;font-weight:600;font-size:12px;letter-spacing:.04em}
+.rsh-num{font-family:'Bebas Neue',sans-serif;font-size:20px;margin-right:6px}
+.rsh-num.r1{color:var(--blue)} .rsh-num.r2{color:var(--red)}
+.rsh-num.r3{color:var(--green)} .rsh-num.r4{color:var(--purple)}
+.rsh-num.r5{color:var(--teal)}
+.st-badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;font-family:'DM Mono',monospace}
+.st-baseline{background:#fff8e6;color:var(--amber)}
+.st-keep{background:#dcfce7;color:var(--green)}
+.st-discard{background:#fee2e2;color:var(--red)}
+.delta-up{color:var(--green);font-family:'DM Mono',monospace}
+.delta-dn{color:var(--red);font-family:'DM Mono',monospace}
+.delta-eq{color:var(--muted);font-family:'DM Mono',monospace}
+
+/* ===== TEST SUITE ===== */
+.sr{border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden}
+.sr summary{background:var(--ink);color:#fff;padding:10px 14px;cursor:pointer;
+  display:flex;align-items:center;gap:10px;font-weight:600;font-size:13px;letter-spacing:.04em;
+  list-style:none}
+.sr summary::-webkit-details-marker{display:none}
+.sr-num{font-family:'Bebas Neue',sans-serif;font-size:24px}
+.sr-num.r1{color:var(--blue)} .sr-num.r2{color:var(--red)}
+.sr-num.r3{color:var(--green)} .sr-num.r4{color:var(--purple)}
+.sr-num.r5{color:var(--teal)}
+.sr-meta{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.5)}
+.sr-body{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px}
+.sr-body table td,.sr-body table th{padding:5px 8px}
+.tag-pass{display:inline-block;background:#dcfce7;color:var(--green);padding:1px 6px;border-radius:10px;font-size:11px}
+.tag-fail{display:inline-block;background:#fee2e2;color:var(--red);padding:1px 6px;border-radius:10px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-title" id="skill-title">{{SKILL_NAME}}</div>
+  <div id="status-badge" class="badge badge-running">运行中</div>
+  <div class="hdr-meta">
+    <span>实验 <strong id="m-total">—</strong></span>
+    <span>轮次 <strong id="m-rounds">—</strong></span>
+    <span>保留 <strong id="m-keep">—</strong></span>
+    <span>丢弃 <strong id="m-discard">—</strong></span>
+  </div>
+</div>
+
+<!-- KPI BAR -->
+<div class="kpi-bar">
+  <div class="kpi"><div class="kpi-label">当前最佳</div><div class="kpi-value up" id="k-best">—</div><div class="kpi-sub">通过率</div></div>
+  <div class="kpi"><div class="kpi-label">原始基线</div><div class="kpi-value base" id="k-base">—</div><div class="kpi-sub">第一轮起点</div></div>
+  <div class="kpi"><div class="kpi-label">累计提升</div><div class="kpi-value up" id="k-lift">—</div><div class="kpi-sub">vs 基线</div></div>
+  <div class="kpi"><div class="kpi-label">总实验数</div><div class="kpi-value" id="k-exps">—</div><div class="kpi-sub" id="k-exps-sub">轮次 —</div></div>
+  <div class="kpi"><div class="kpi-label">保留 / 丢弃</div><div class="kpi-value" id="k-kd">—</div><div class="kpi-sub" id="k-kd-sub">保留率 —</div></div>
+  <div class="kpi"><div class="kpi-label">最大单次跳升</div><div class="kpi-value up" id="k-jump">—</div><div class="kpi-sub" id="k-jump-sub">实验 —</div></div>
+</div>
+
+<!-- MILESTONE TIMELINE -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">实验里程碑时间轴</div>
+  <div class="ms-body" id="ms-body">
+    <div style="color:var(--muted);font-size:13px">等待实验数据…</div>
+  </div>
+</div>
+
+<!-- THREE COLUMN -->
+<div class="three-col">
+  <div class="panel">
+    <div class="panel-title">得分趋势</div>
+    <div id="chart-wrap"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">评估项通过率</div>
+    <div class="eval-list" id="eval-list">
+      <div style="color:var(--muted);font-size:13px">等待数据…</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">各轮效率</div>
+    <div class="round-stat-list" id="round-stat-list">
+      <div style="color:var(--muted);font-size:13px">等待数据…</div>
+    </div>
+  </div>
+</div>
+
+<!-- TWO COLUMN -->
+<div class="two-col">
+  <div class="panel">
+    <div class="panel-title">单次最大跳升 TOP 3</div>
+    <div id="top-jumps"><div style="color:var(--muted);font-size:13px">等待数据…</div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">自动洞察</div>
+    <div id="insights"><div style="color:var(--muted);font-size:13px">等待数据…</div></div>
+  </div>
+</div>
+
+<!-- EXPERIMENT TABLE -->
+<div class="panel" style="margin-bottom:16px">
+  <div class="panel-title">完整实验记录</div>
+  <div class="exp-tabs" id="exp-tabs"></div>
+  <div style="overflow-x:auto"><table id="exp-table">
+    <thead><tr><th>#</th><th>得分</th><th>通过率</th><th>Δ</th><th>状态</th><th>变更描述</th></tr></thead>
+    <tbody id="exp-tbody"></tbody>
+  </table></div>
+</div>
+
+<!-- TEST SUITE -->
+<div class="panel">
+  <div class="panel-title">测试套件（点击展开）</div>
+  <div id="suite-body">
+    <!-- =====================================================
+         每轮开始前在此追加一个 <details class="sr"> 块
+         示例：
+         <details class="sr">
+           <summary>
+             <span class="sr-num r1">01</span>
+             第一轮 — 基础场景
+             <span class="sr-meta">3 场景 × 4 eval · 基线 70% → 最终 100%</span>
+           </summary>
+           <div class="sr-body">
+             <div>
+               <div class="panel-title">测试场景</div>
+               <table>
+                 <thead><tr><th>ID</th><th>场景描述</th><th>关键考察点</th></tr></thead>
+                 <tbody>
+                   <tr><td>A1</td><td>场景描述</td><td>考察点</td></tr>
+                 </tbody>
+               </table>
+             </div>
+             <div>
+               <div class="panel-title">Eval 标准</div>
+               <table>
+                 <thead><tr><th>ID</th><th>问题</th><th>通过</th><th>失败</th></tr></thead>
+                 <tbody>
+                   <tr><td>E1</td><td>问题</td>
+                     <td><span class="tag-pass">通过条件</span></td>
+                     <td><span class="tag-fail">失败条件</span></td>
+                   </tr>
+                 </tbody>
+               </table>
+             </div>
+           </div>
+         </details>
+         ===================================================== -->
+    <div style="color:var(--muted);font-size:13px">在运行前手动添加本轮测试套件。</div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<script>
+// =====================================================
+// ROUND CONFIG — 每升级一轮更新此处
+// =====================================================
+const SKILL_NAME = '{{SKILL_NAME}}';
+
+const ROUNDS = [
+  {label:'第一轮', cls:'r1', base:0},
+  // {label:'第二轮', cls:'r2', base:X},  ← X = 第一轮最后一个实验的 id
+  // {label:'第三轮', cls:'r3', base:Y},
+  // {label:'第四轮', cls:'r4', base:Z},
+  // {label:'第五轮', cls:'r5', base:W},
+];
+
+// 按实验 id 返回轮次 index（0-based）
+// 更新规则：id <= 第N轮最后一个实验id 时返回 N-1
+function getRound(id) {
+  return 0; // 只有一轮时始终返回 0
+  // 多轮示例：return id<=5?0:id<=12?1:id<=18?2:3;
+}
+
+// ECharts markArea 背景色（与 ROUNDS 一一对应）
+const areaColors      = ['rgba(0,56,255,.06)']; // r1
+// 追加示例：, 'rgba(232,40,26,.06)', 'rgba(0,122,56,.06)', 'rgba(91,33,182,.06)', 'rgba(8,145,178,.06)'
+const areaLabelColors = ['rgba(0,56,255,.3)'];
+// =====================================================
+
+// --- 状态 ---
+let echartsInst = null;
+let activeTab = 'all';
+let lastData = null;
+
+// --- 初始化 ---
+document.getElementById('skill-title').textContent = SKILL_NAME;
+initChart();
+loadData();
+setInterval(loadData, 10000);
+
+function initChart() {
+  const el = document.getElementById('chart-wrap');
+  echartsInst = echarts.init(el);
+  requestAnimationFrame(() => echartsInst && echartsInst.resize());
+  window.addEventListener('resize', () => echartsInst && echartsInst.resize());
+}
+
+async function loadData() {
+  try {
+    const r = await fetch('results.json?_=' + Date.now());
+    if (!r.ok) return;
+    const d = await r.json();
+    lastData = d;
+    render(d);
+  } catch(e) { /* 文件还不存在时静默失败 */ }
+}
+
+function render(d) {
+  const exps = d.experiments || [];
+  if (!exps.length) return;
+
+  // --- 状态 ---
+  const statusEl = document.getElementById('status-badge');
+  statusEl.textContent = d.status === 'complete' ? '已完成' : '运行中';
+  statusEl.className = 'badge ' + (d.status === 'complete' ? 'badge-complete' : 'badge-running');
+
+  // --- 统计 ---
+  const keeps    = exps.filter(e => e.status === 'keep');
+  const discards = exps.filter(e => e.status === 'discard');
+  const nonBase  = exps.filter(e => e.status !== 'baseline');
+  const keepRate = nonBase.length ? Math.round(keeps.length / nonBase.length * 100) : 0;
+
+  document.getElementById('m-total').textContent   = exps.length;
+  document.getElementById('m-rounds').textContent  = ROUNDS.length;
+  document.getElementById('m-keep').textContent    = keeps.length;
+  document.getElementById('m-discard').textContent = discards.length;
+
+  // --- KPI ---
+  const best  = d.best_score   ?? 0;
+  const base0 = d.baseline_score ?? 0;
+  const lift  = (best - base0).toFixed(1);
+
+  document.getElementById('k-best').textContent    = best.toFixed(1) + '%';
+  document.getElementById('k-base').textContent    = base0.toFixed(1) + '%';
+  document.getElementById('k-lift').textContent    = (lift > 0 ? '+' : '') + lift + '%';
+  document.getElementById('k-exps').textContent    = exps.length;
+  document.getElementById('k-exps-sub').textContent= '共 ' + ROUNDS.length + ' 轮';
+  document.getElementById('k-kd').textContent      = keeps.length + ' / ' + discards.length;
+  document.getElementById('k-kd-sub').textContent  = '保留率 ' + keepRate + '%';
+
+  // 最大单次跳升
+  let maxJump = 0, maxJumpId = null;
+  for (let i = 1; i < exps.length; i++) {
+    if (exps[i].status === 'keep') {
+      const delta = exps[i].pass_rate - exps[i-1].pass_rate;
+      if (delta > maxJump) { maxJump = delta; maxJumpId = exps[i].id; }
+    }
+  }
+  document.getElementById('k-jump').textContent     = maxJump > 0 ? '+' + maxJump.toFixed(1) + '%' : '—';
+  document.getElementById('k-jump-sub').textContent = maxJumpId !== null ? '实验 #' + maxJumpId : '';
+
+  // --- 里程碑时间轴 ---
+  renderMilestone(exps);
+
+  // --- 得分趋势 ---
+  renderChart(exps);
+
+  // --- Eval 通过率 ---
+  renderEvalBars(d.eval_breakdown || []);
+
+  // --- 各轮效率 ---
+  renderRoundStats(exps);
+
+  // --- 最大跳升 TOP3 ---
+  renderTopJumps(exps);
+
+  // --- 自动洞察 ---
+  renderInsights(exps, keeps, keepRate);
+
+  // --- 实验表 ---
+  renderTable(exps);
+}
+
+function renderMilestone(exps) {
+  const body = document.getElementById('ms-body');
+  if (!exps.length) return;
+
+  const byRound = ROUNDS.map(() => []);
+  exps.forEach(e => { const ri = getRound(e.id); if (byRound[ri]) byRound[ri].push(e); });
+
+  const svgDiamond = `<svg class="ms-dot-shape" viewBox="0 0 18 18"><polygon points="9,1 17,9 9,17 1,9" fill="currentColor"/></svg>`;
+  const svgCircle  = `<svg class="ms-dot-shape" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="currentColor"/></svg>`;
+  const svgTri     = `<svg class="ms-dot-shape" viewBox="0 0 18 18"><polygon points="9,2 17,16 1,16" fill="currentColor"/></svg>`;
+
+  body.innerHTML = byRound.map((es, ri) => {
+    if (!es.length) return '';
+    const rnd = ROUNDS[ri];
+    const dots = es.map(e => {
+      const shape = e.status === 'baseline' ? svgDiamond : e.status === 'keep' ? svgCircle : svgTri;
+      return `<div class="ms-dot ${e.status}" title="#${e.id}: ${e.description}">
+        <span class="ms-dot-pct">${e.pass_rate.toFixed(0)}%</span>${shape}
+      </div>`;
+    }).join('');
+    return `<div class="ms-round">
+      <div class="ms-round-label ${rnd.cls}">${rnd.label}</div>
+      <div class="ms-dots">${dots}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderChart(exps) {
+  if (!echartsInst || !exps.length) return;
+
+  const markAreas = ROUNDS.map((rnd, ri) => {
+    const inRound = exps.filter(e => getRound(e.id) === ri);
+    if (!inRound.length) return null;
+    const x0 = inRound[0].id, x1 = inRound[inRound.length-1].id;
+    return [{xAxis: x0, itemStyle:{color:areaColors[ri]||'rgba(0,0,0,.04)'},
+              label:{show:true,position:'insideTopLeft',formatter:rnd.label,
+                color:areaLabelColors[ri]||'rgba(0,0,0,.3)',fontSize:11}},
+            {xAxis: x1}];
+  }).filter(Boolean);
+
+  const symbolMap = {baseline:'diamond', keep:'circle', discard:'triangle'};
+  const data = exps.map(e => ({
+    value: [e.id, +e.pass_rate.toFixed(2)],
+    symbol: symbolMap[e.status] || 'circle',
+    symbolSize: 9,
+    itemStyle: {
+      color: e.status === 'keep' ? 'var(--green)' : e.status === 'baseline' ? 'var(--amber)' : 'var(--red)'
+    }
+  }));
+
+  echartsInst.setOption({
+    tooltip:{trigger:'item',formatter:p=>{
+      const e = p.data; return `<b>#${e.value[0]}</b> ${e.value[1]}%<br/>状态: ${exps[p.dataIndex]?.status||''}<br/>${exps[p.dataIndex]?.description||''}`;
+    }},
+    grid:{left:40,right:12,top:12,bottom:28,containLabel:false},
+    xAxis:{type:'value',min:0,max:exps[exps.length-1].id+1,axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:'#edf0f7'}}},
+    yAxis:{type:'value',min:0,max:100,axisLabel:{formatter:'{value}%'},splitLine:{lineStyle:{color:'#edf0f7'}}},
+    series:[{type:'line',smooth:.3,lineStyle:{color:'#c5ccda',width:2},data,
+      markArea:{silent:true,data:markAreas}}]
+  }, true);
+
+  requestAnimationFrame(() => echartsInst && echartsInst.resize());
+}
+
+function renderEvalBars(breakdown) {
+  const el = document.getElementById('eval-list');
+  if (!breakdown.length) return;
+  el.innerHTML = breakdown.map(ev => {
+    const pct = ev.total ? Math.round(ev.pass_count / ev.total * 100) : 0;
+    const cls = pct === 100 ? 'c-green' : pct >= 80 ? 'c-blue' : pct >= 60 ? 'c-amber' : 'c-red';
+    return `<div class="ev-row">
+      <div class="ev-name">${ev.name}</div>
+      <div class="ev-bar-bg"><div class="ev-bar-fg ${cls}" style="width:${pct}%"></div></div>
+      <div class="ev-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRoundStats(exps) {
+  const el = document.getElementById('round-stat-list');
+  if (!exps.length) return;
+  el.innerHTML = ROUNDS.map((rnd, ri) => {
+    const inRound = exps.filter(e => getRound(e.id) === ri);
+    if (!inRound.length) return '';
+    const bases = inRound.filter(e => e.status === 'baseline');
+    const startPct = bases.length ? bases[0].pass_rate : 0;
+    const endPct   = Math.max(...inRound.map(e => e.pass_rate));
+    const lift     = (endPct - startPct).toFixed(1);
+    const ks       = inRound.filter(e => e.status === 'keep').length;
+    const ds       = inRound.filter(e => e.status === 'discard').length;
+    const total    = inRound.length - bases.length;
+    const eff      = total > 0 ? (parseFloat(lift) / total).toFixed(1) : '—';
+    return `<div class="rs-card">
+      <div class="rs-label ${rnd.cls}">${rnd.label}</div>
+      <div class="rs-row"><span>${startPct.toFixed(1)}% → <strong>${endPct.toFixed(1)}%</strong></span><span>+${lift}%</span></div>
+      <div class="rs-row"><span>${inRound.length} 实验 · ${ks} 保留 · ${ds} 丢弃</span><span>效率 <strong>${eff}%</strong>/次</span></div>
+      <div class="rs-bar-wrap"><div class="rs-bar-fill ${rnd.cls}" style="width:${endPct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTopJumps(exps) {
+  const jumps = [];
+  for (let i = 1; i < exps.length; i++) {
+    if (exps[i].status === 'keep') {
+      const delta = exps[i].pass_rate - exps[i-1].pass_rate;
+      if (delta > 0) jumps.push({id: exps[i].id, delta, desc: exps[i].description});
+    }
+  }
+  jumps.sort((a,b) => b.delta - a.delta);
+  const top = jumps.slice(0, 3);
+  document.getElementById('top-jumps').innerHTML = top.length
+    ? top.map((j, idx) => `<div class="jump-row">
+        <div class="jump-rank">${idx+1}</div>
+        <div class="jump-delta">+${j.delta.toFixed(1)}%</div>
+        <div><div class="jump-id">#${j.id}</div><div class="jump-desc">${j.desc}</div></div>
+      </div>`).join('')
+    : '<div style="color:var(--muted)">暂无数据</div>';
+}
+
+function renderInsights(exps, keeps, keepRate) {
+  const el = document.getElementById('insights');
+  const rows = [];
+
+  // 保留率评估
+  const keepEval = keepRate >= 60 ? '健康' : keepRate >= 40 ? '一般' : '偏低，考虑调整 mutation 策略';
+  rows.push(`<div class="insight-row"><div class="insight-label">保留率</div>${keepRate}% — ${keepEval}</div>`);
+
+  // 最高效轮次
+  let bestRound = null, bestEff = -1;
+  ROUNDS.forEach((rnd, ri) => {
+    const inRound = exps.filter(e => getRound(e.id) === ri);
+    const bases   = inRound.filter(e => e.status === 'baseline');
+    if (!bases.length) return;
+    const start = bases[0].pass_rate;
+    const end   = Math.max(...inRound.map(e => e.pass_rate));
+    const nonB  = inRound.length - bases.length;
+    const eff   = nonB > 0 ? (end - start) / nonB : 0;
+    if (eff > bestEff) { bestEff = eff; bestRound = rnd.label; }
+  });
+  if (bestRound) rows.push(`<div class="insight-row"><div class="insight-label">最高效轮次</div>${bestRound}（效率 ${bestEff.toFixed(1)}%/次）</div>`);
+
+  // 平均有效提升
+  const posDeltas = [];
+  for (let i = 1; i < exps.length; i++) {
+    if (exps[i].status === 'keep') {
+      const d = exps[i].pass_rate - exps[i-1].pass_rate;
+      if (d > 0) posDeltas.push(d);
+    }
+  }
+  const avgLift = posDeltas.length ? (posDeltas.reduce((a,b)=>a+b,0)/posDeltas.length).toFixed(1) : '—';
+  rows.push(`<div class="insight-row"><div class="insight-label">平均单次有效提升</div>+${avgLift}%</div>`);
+
+  // 停滞检测
+  const last3 = exps.slice(-3).filter(e => e.status !== 'baseline');
+  if (last3.length >= 3 && last3.every(e => e.status === 'discard')) {
+    rows.push(`<div class="insight-row insight-warn"><div class="insight-label">⚠ 停滞警告</div>连续 3 次实验无提升，建议检查失败模式或考虑终止。</div>`);
+  }
+
+  el.innerHTML = rows.join('');
+}
+
+function renderTable(exps) {
+  // Tabs
+  const tabsEl = document.getElementById('exp-tabs');
+  tabsEl.innerHTML = `<button class="exp-tab ${activeTab==='all'?'active':''}" onclick="setTab('all')">全部</button>`
+    + ROUNDS.map((rnd, ri) => {
+        const has = exps.some(e => getRound(e.id) === ri);
+        return has ? `<button class="exp-tab ${activeTab===String(ri)?'active':''}" onclick="setTab('${ri}')">${rnd.label}</button>` : '';
+      }).join('');
+
+  // Rows
+  const tbody = document.getElementById('exp-tbody');
+  let prevRate = null;
+  tbody.innerHTML = ROUNDS.map((rnd, ri) => {
+    const inRound = exps.filter(e => getRound(e.id) === ri);
+    if (!inRound.length) return '';
+    if (activeTab !== 'all' && activeTab !== String(ri)) return '';
+    const startPct = (() => {
+      const b = inRound.find(e=>e.status==='baseline'); return b ? b.pass_rate : 0;
+    })();
+    const endPct   = Math.max(...inRound.map(e=>e.pass_rate));
+    const hdr = `<tr class="rnd-hdr rnd-seg ${rnd.cls}"><td colspan="6">
+      <span class="rsh-num ${rnd.cls}">${String(ri+1).padStart(2,'0')}</span>
+      ${rnd.label} &nbsp;·&nbsp; ${inRound.length} 实验 &nbsp;·&nbsp; 满分 ${inRound[0].max_score} &nbsp;·&nbsp; ${startPct.toFixed(1)}% → ${endPct.toFixed(1)}%
+    </td></tr>`;
+    const rows = inRound.map(e => {
+      const delta = prevRate !== null ? e.pass_rate - prevRate : null;
+      prevRate = e.pass_rate;
+      const deltaStr = delta === null ? '' :
+        delta > 0 ? `<span class="delta-up">+${delta.toFixed(1)}%</span>` :
+        delta < 0 ? `<span class="delta-dn">${delta.toFixed(1)}%</span>` :
+                    `<span class="delta-eq">—</span>`;
+      const badge = e.status === 'baseline' ? '<span class="st-badge st-baseline">基线</span>'
+        : e.status === 'keep' ? '<span class="st-badge st-keep">保留 ✓</span>'
+        : '<span class="st-badge st-discard">丢弃 ✗</span>';
+      return `<tr class="rnd-seg ${rnd.cls}"><td>${e.id}</td><td>${e.score}/${e.max_score}</td>
+        <td><b>${e.pass_rate.toFixed(1)}%</b></td><td>${deltaStr}</td><td>${badge}</td>
+        <td style="color:var(--muted)">${e.description}</td></tr>`;
+    }).join('');
+    return hdr + rows;
+  }).join('');
+}
+
+function setTab(t) { activeTab = t; if (lastData) renderTable(lastData.experiments||[]); }
+</script>
+</body>
+</html>
