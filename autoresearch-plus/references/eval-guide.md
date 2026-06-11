@@ -1,121 +1,121 @@
-# Eval Guide
+# 评估指南（Eval Guide）
 
-How to write eval criteria that actually improve your skills instead of giving you false confidence.
-
----
-
-## the golden rule
-
-Every eval must be a yes/no question. Not a scale. Not a vibe check. Binary.
-
-Why: Scales compound variability. If you have 4 evals scored 1-7, your total score has massive variance across runs. Binary evals give you a reliable signal.
+如何编写真正能改进技能的评估标准，而不是给你一种虚假的信心。
 
 ---
 
-## good evals vs bad evals
+## 黄金法则
 
-### Text/copy skills (newsletters, tweets, emails, landing pages)
+每条评估都必须是一个「是/否」问题。不是分级评分，不是凭感觉打分。必须是二元的。
 
-**Bad evals:**
-- "Is the writing good?" (too vague — what's "good"?)
-- "Rate the engagement potential 1-10" (scale = unreliable)
-- "Does it sound like a human?" (subjective, inconsistent scoring)
-
-**Good evals:**
-- "Does the output contain zero phrases from this banned list: [game-changer, here's the kicker, the best part, level up]?" (binary, specific)
-- "Does the opening sentence reference a specific time, place, or sensory detail?" (binary, checkable)
-- "Is the output between 150-400 words?" (binary, measurable)
-- "Does it end with a specific CTA that tells the reader exactly what to do next?" (binary, structural)
-
-### Visual/design skills (diagrams, images, slides)
-
-**Bad evals:**
-- "Does it look professional?" (subjective)
-- "Rate the visual quality 1-5" (scale)
-- "Is the layout good?" (vague)
-
-**Good evals:**
-- "Is all text in the image legible with no truncated or overlapping words?" (binary, specific)
-- "Does the color palette use only soft/pastel tones with no neon, bright red, or high-saturation colors?" (binary, checkable)
-- "Is the layout linear — flowing either left-to-right or top-to-bottom with no scattered elements?" (binary, structural)
-- "Is the image free of numbered steps, ordinals, or sequential numbering?" (binary, specific)
-
-### Code/technical skills (code generation, configs, scripts)
-
-**Bad evals:**
-- "Is the code clean?" (subjective)
-- "Does it follow best practices?" (vague, which best practices?)
-
-**Good evals:**
-- "Does the code run without errors?" (binary, testable — actually execute it)
-- "Does the output contain zero TODO or placeholder comments?" (binary, greppable)
-- "Are all function and variable names descriptive (no single-letter names except loop counters)?" (binary, checkable)
-- "Does the code include error handling for all external calls (API, file I/O, network)?" (binary, structural)
-
-### Document skills (proposals, reports, decks)
-
-**Bad evals:**
-- "Is it comprehensive?" (compared to what?)
-- "Does it address the client's needs?" (too open-ended)
-
-**Good evals:**
-- "Does the document contain all required sections: [list them]?" (binary, structural)
-- "Is every claim backed by a specific number, date, or source?" (binary, checkable)
-- "Is the document under [X] pages/words?" (binary, measurable)
-- "Does the executive summary fit in one paragraph of 3 sentences or fewer?" (binary, countable)
+原因：分级评分会累积放大变异性。如果你有 4 条采用 1-7 分制的评估，那么总分在多次运行之间会产生巨大的方差。而二元评估能给你一个可靠的信号。
 
 ---
 
-## common mistakes
+## 好的评估 vs 坏的评估
 
-### 1. Too many evals
-More than 6 evals and the skill starts gaming them — it optimizes for passing the test instead of producing good output. Like a student who memorizes answers without understanding the material.
+### 文本/文案类技能（新闻通讯、推文、邮件、落地页）
 
-**Fix:** Pick the 3-6 checks that matter most. If everything passes those, the output is probably good.
+**坏的评估：**
+- “文笔好不好？”（太含糊——什么算“好”？）
+- “给吸引力打个 1-10 分”（分级评分 = 不可靠）
+- “它读起来像人写的吗？”（主观，打分不一致）
 
-### 2. Too narrow/rigid
-"Must contain exactly 3 bullet points" or "Must use the word 'because' at least twice" — these create skills that technically pass but produce weird, stilted output.
+**好的评估：**
+- “输出中是否完全不含以下禁用清单里的短语：[game-changer, here's the kicker, the best part, level up]？”（二元，具体）
+- “开头第一句是否引用了某个具体的时间、地点或感官细节？”（二元，可核查）
+- “输出是否在 150-400 字之间？”（二元，可衡量）
+- “它是否以一个明确的行动号召（CTA）结尾，告诉读者接下来该具体做什么？”（二元，结构性）
 
-**Fix:** Evals should check for qualities you care about, not arbitrary structural constraints.
+### 视觉/设计类技能（图表、图像、幻灯片）
 
-### 3. Overlapping evals
-If eval 1 is "Is the text grammatically correct?" and eval 4 is "Are there any spelling errors?" — these overlap. A grammar fail often includes spelling. You're double-counting.
+**坏的评估：**
+- “它看起来专业吗？”（主观）
+- “给视觉质量打个 1-5 分”（分级评分）
+- “排版好不好？”（含糊）
 
-**Fix:** Each eval should test something distinct.
+**好的评估：**
+- “图像中所有文字是否都清晰可读，没有被截断或重叠的词？”（二元，具体）
+- “配色是否只使用柔和/粉彩色调，没有霓虹色、鲜红色或高饱和度的颜色？”（二元，可核查）
+- “排版是否是线性的——沿从左到右或从上到下流动，没有散乱的元素？”（二元，结构性）
+- “图像是否没有出现编号步骤、序数词或顺序编号？”（二元，具体）
 
-### 4. Unmeasurable by an agent
-"Would a human find this engaging?" — an agent can't reliably answer this. It'll say "yes" almost every time.
+### 代码/技术类技能（代码生成、配置、脚本）
 
-**Fix:** Translate subjective qualities into observable signals. "Engaging" might mean: "Does the first sentence contain a specific claim, story, or question (not a generic statement)?"
+**坏的评估：**
+- “代码干净吗？”（主观）
+- “它是否遵循最佳实践？”（含糊，哪些最佳实践？）
+
+**好的评估：**
+- “代码能否无错误运行？”（二元，可测试——实际执行它）
+- “输出中是否完全不含 TODO 或占位符注释？”（二元，可用 grep 检索）
+- “所有函数名和变量名是否都有描述性（除循环计数器外没有单字母命名）？”（二元，可核查）
+- “代码是否为所有外部调用（API、文件 I/O、网络）都包含了错误处理？”（二元，结构性）
+
+### 文档类技能（提案、报告、演示文稿）
+
+**坏的评估：**
+- “它全面吗？”（和什么比较？）
+- “它是否满足了客户的需求？”（太开放）
+
+**好的评估：**
+- “文档是否包含所有必需的章节：[在此列出]？”（二元，结构性）
+- “每一条主张是否都有具体的数字、日期或来源支撑？”（二元，可核查）
+- “文档是否在 [X] 页/字以内？”（二元，可衡量）
+- “执行摘要是否能容纳在不超过 3 句话的一个段落里？”（二元，可计数）
 
 ---
 
-## writing your evals: the 3-question test
+## 常见错误
 
-Before finalizing an eval, ask:
+### 1. 评估太多
+超过 6 条评估，技能就会开始钻空子——它会为了通过测试而优化，而不是为了产出好的结果。就像一个死记硬背答案、却不理解内容的学生。
 
-1. **Could two different agents score the same output and agree?** If not, the eval is too subjective. Rewrite it.
-2. **Could a skill game this eval without actually improving?** If yes, the eval is too narrow. Broaden it.
-3. **Does this eval test something the user actually cares about?** If not, drop it. Every eval that doesn't matter dilutes the signal from evals that do.
+**修正：** 挑出最重要的 3-6 条检查。如果这些全都通过了，输出大概率就是好的。
+
+### 2. 太狭窄/僵硬
+“必须恰好包含 3 个项目符号”或“必须至少用两次‘因为’这个词”——这类评估会催生出技术上能通过、但产出怪异、生硬结果的技能。
+
+**修正：** 评估应当检查你真正在意的品质，而不是任意的结构性约束。
+
+### 3. 评估相互重叠
+如果评估 1 是“文本语法是否正确？”而评估 4 是“是否有拼写错误？”——这两条就重叠了。语法不过关往往也包含拼写问题。你这是在重复计分。
+
+**修正：** 每条评估都应当检验一个不同的方面。
+
+### 4. 智能体无法衡量
+“人类会觉得这有吸引力吗？”——智能体无法可靠地回答这个问题。它几乎每次都会说“是”。
+
+**修正：** 把主观品质转化为可观察的信号。“有吸引力”也许意味着：“第一句话是否包含一个具体的主张、故事或问题（而不是泛泛的陈述）？”
 
 ---
 
-## template
+## 编写你的评估：三问测试
 
-Copy this for each eval:
+在敲定一条评估之前，先问问：
+
+1. **两个不同的智能体对同一份输出打分，能达成一致吗？** 如果不能，说明这条评估太主观了。重写它。
+2. **技能能否在不真正改进的情况下钻空子通过这条评估？** 如果能，说明这条评估太狭窄了。把它放宽。
+3. **这条评估检验的是用户真正在意的东西吗？** 如果不是，去掉它。每一条无关紧要的评估，都会稀释那些真正重要的评估所给出的信号。
+
+---
+
+## 模板
+
+为每条评估复制以下内容：
 
 ```
-EVAL [N]: [Short name]
-Question: [Yes/no question]
-Pass: [What "yes" looks like — one sentence, specific]
-Fail: [What triggers "no" — one sentence, specific]
+EVAL [N]: [简短名称]
+问题：[是/否 问题]
+通过：[“是”是什么样子——一句话，具体]
+不通过：[什么会触发“否”——一句话，具体]
 ```
 
-Example:
+示例：
 
 ```
-EVAL 1: Text legibility
-Question: Is all text in the output fully legible with no truncated, overlapping, or cut-off words?
-Pass: Every word is complete and readable without squinting or guessing
-Fail: Any word is partially hidden, overlapping another element, or cut off at the edge
+EVAL 1: 文本清晰度
+问题：输出中所有文字是否都完全清晰可读，没有被截断、重叠或裁切的词？
+通过：每个词都完整、可读，无需眯眼或猜测
+不通过：任何一个词被部分遮挡、与其他元素重叠，或在边缘被裁切
 ```
